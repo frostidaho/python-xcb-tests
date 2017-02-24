@@ -3,12 +3,11 @@
 # https://github.com/tmarble/yxcba/blob/master/yxcba
 # https://github.com/ben0x539/overlay-thing/blob/master/xcb.c
 # https://github.com/sidorares/node-x11/blob/master/examples/smoketest/transpwindow.js
-import sys
-import time
+import os
 import xcffib
 import xcffib.xproto
 from xcffib.xproto import CW, EventMask
-import os
+
 
 conn = xcffib.connect(display=os.getenv('DISPLAY', ':0'))
 setup = conn.get_setup()
