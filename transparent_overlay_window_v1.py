@@ -15,6 +15,9 @@ setup = conn.get_setup()
 screen = conn.get_setup().roots[conn.pref_screen]
 root = screen.root
 
+msg = 'Default screen color depth {} bits with visual_id {}'
+print(msg.format(screen.root_depth, screen.root_visual))
+
 def get_visual(screen, desired_depth=32):
     """get_visual() returns the visual id of the screen @ some depth
 
@@ -36,6 +39,8 @@ def get_visual(screen, desired_depth=32):
     for depth in tuple(screen.allowed_depths):
         for v in depth.visuals:
             if depth.depth == desired_depth:
+                msg = 'For a screen depth of {} bits the visual_id is {}'
+                print(msg.format(desired_depth, v.visual_id))
                 return v.visual_id
     return None
 
@@ -76,7 +81,6 @@ class OverlayWindow(object):
             return self._colormap
         except AttributeError:
             cmap_id = self.conn.generate_id()
-            # self.conn.flush()
             cm = self.conn.core.CreateColormap(
                 xcffib.xproto.ColormapAlloc._None,
                 cmap_id,
@@ -85,11 +89,9 @@ class OverlayWindow(object):
                 is_checked=True
             )
             cm.check()
-            # self.conn.flush()
-            print(cm)
-            
-            # self.conn.flush()
             self._colormap = cmap_id
+            msg = 'Created a colormap with id {} on window {} with visual_id {}'
+            print(msg.format(cmap_id, screen.root, self.visual))
             return cmap_id
 
     def create_window(self):
@@ -104,7 +106,6 @@ class OverlayWindow(object):
             self.border_width,
             xcffib.xproto.WindowClass.InputOutput,
             self.visual,
-            # screen.root_visual,
             self.value_mask,
             self.value_list,
             is_checked=True,
@@ -113,17 +114,11 @@ class OverlayWindow(object):
 
 
 owin = OverlayWindow(conn)
-window = owin.wid
 
-# conn.core.CreateWindow(xcffib.CopyFromParent, window, screen.root,
-#                        100, 100, 100, 100, 1,
-#                        xcffib.xproto.WindowClass.InputOutput, screen.root_visual,
-#                        xcffib.xproto.CW.BackPixel | xcffib.xproto.CW.EventMask | CW.OverrideRedirect,
-#                        [background, xcffib.xproto.EventMask.StructureNotify | xcffib.xproto.EventMask.Exposure, 1])
 
 name = 'new_window_name'
 conn.core.ChangeProperty(xcffib.xproto.PropMode.Replace,
-                         window, xcffib.xproto.Atom.WM_NAME,
+                         owin.wid, xcffib.xproto.Atom.WM_NAME,
                          xcffib.xproto.Atom.STRING, 8, len(name),
                          name)
 
@@ -134,18 +129,10 @@ wm_delete_window = "WM_DELETE_WINDOW"
 wm_delete_window = conn.core.InternAtom(0, len(wm_delete_window), wm_delete_window).reply().atom
 
 
-
 conn.core.ChangeProperty(xcffib.xproto.PropMode.Replace,
-                         window, wm_protocols,
+                         owin.wid, wm_protocols,
                          xcffib.xproto.Atom.ATOM, 32, 1,
                          [wm_delete_window])
-
-# conn.core.ConfigureWindow(window,
-#                           xcffib.xproto.ConfigWindow.X | xcffib.xproto.ConfigWindow.Y |
-#                           xcffib.xproto.ConfigWindow.Width | xcffib.xproto.ConfigWindow.Height |
-#                           xcffib.xproto.ConfigWindow.BorderWidth,
-#                           [0, 0, 100, 100, 1])
-
 
 def killwindow():
     while True:
@@ -160,14 +147,27 @@ def killwindow():
             if data2 == 'WM_DELETE_WINDOW':
                 break
 
-    conn.core.UnmapWindow(window)
+    conn.core.UnmapWindow(owin.wid)
     conn.flush()
 
-conn.core.MapWindow(window)
+conn.core.MapWindow(owin.wid)
 conn.flush()
 
 from threading import Thread
 t = Thread(target=killwindow)
 t.start()
 t.join()
+
+# conn.core.CreateWindow(xcffib.CopyFromParent, window, screen.root,
+#                        100, 100, 100, 100, 1,
+#                        xcffib.xproto.WindowClass.InputOutput, screen.root_visual,
+#                        xcffib.xproto.CW.BackPixel | xcffib.xproto.CW.EventMask | CW.OverrideRedirect,
+#                        [background, xcffib.xproto.EventMask.StructureNotify | xcffib.xproto.EventMask.Exposure, 1])
+
+
+# conn.core.ConfigureWindow(owin.wid,
+#                           xcffib.xproto.ConfigWindow.X | xcffib.xproto.ConfigWindow.Y |
+#                           xcffib.xproto.ConfigWindow.Width | xcffib.xproto.ConfigWindow.Height |
+#                           xcffib.xproto.ConfigWindow.BorderWidth,
+#                           [0, 0, 100, 100, 1])
 
