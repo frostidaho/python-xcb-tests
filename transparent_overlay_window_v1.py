@@ -39,7 +39,7 @@ def get_visual(screen, desired_depth=32):
                 return v.visual_id
     return None
 
-class ExternalWindow(object):
+class OverlayWindow(object):
     def __init__(self, conn):
         self.conn = conn
         self.x, self.y = 100, 100
@@ -50,7 +50,6 @@ class ExternalWindow(object):
         # if 24 just rgb
         self.visual = get_visual(screen, desired_depth=self.depth)
 
-        # CW.BackPixel - should use?
         self.value_mask =  (
             CW.BackPixel |
             CW.BorderPixel |
@@ -60,6 +59,7 @@ class ExternalWindow(object):
         )
         self.event_mask = EventMask.StructureNotify | EventMask.Exposure
         background = conn.core.AllocColor(screen.default_colormap, 0x2828, 0x8383, 0xCECE).reply().pixel  # Color "#2883ce"
+        # order for value_list is important
         self.value_list = [
             background,
             0,
@@ -67,10 +67,8 @@ class ExternalWindow(object):
             self.event_mask,
             self.colormap,
         ]
-        self.conn.flush()
         self.wid = conn.generate_id()
         self.create_window()
-        self.conn.flush()
         
     @property
     def colormap(self):
@@ -78,7 +76,7 @@ class ExternalWindow(object):
             return self._colormap
         except AttributeError:
             cmap_id = self.conn.generate_id()
-            self.conn.flush()
+            # self.conn.flush()
             cm = self.conn.core.CreateColormap(
                 xcffib.xproto.ColormapAlloc._None,
                 cmap_id,
@@ -90,7 +88,7 @@ class ExternalWindow(object):
             # self.conn.flush()
             print(cm)
             
-            self.conn.flush()
+            # self.conn.flush()
             self._colormap = cmap_id
             return cmap_id
 
@@ -114,14 +112,8 @@ class ExternalWindow(object):
         w.check()
 
 
-
-x = ExternalWindow(conn)
-cmap = x.colormap
-
-window = x.wid
-
-# window = conn.generate_id()
-
+owin = OverlayWindow(conn)
+window = owin.wid
 
 # conn.core.CreateWindow(xcffib.CopyFromParent, window, screen.root,
 #                        100, 100, 100, 100, 1,
@@ -129,7 +121,7 @@ window = x.wid
 #                        xcffib.xproto.CW.BackPixel | xcffib.xproto.CW.EventMask | CW.OverrideRedirect,
 #                        [background, xcffib.xproto.EventMask.StructureNotify | xcffib.xproto.EventMask.Exposure, 1])
 
-name = 'yolo'
+name = 'new_window_name'
 conn.core.ChangeProperty(xcffib.xproto.PropMode.Replace,
                          window, xcffib.xproto.Atom.WM_NAME,
                          xcffib.xproto.Atom.STRING, 8, len(name),
@@ -148,20 +140,12 @@ conn.core.ChangeProperty(xcffib.xproto.PropMode.Replace,
                          xcffib.xproto.Atom.ATOM, 32, 1,
                          [wm_delete_window])
 
-conn.core.ConfigureWindow(window,
-                          xcffib.xproto.ConfigWindow.X | xcffib.xproto.ConfigWindow.Y |
-                          xcffib.xproto.ConfigWindow.Width | xcffib.xproto.ConfigWindow.Height |
-                          xcffib.xproto.ConfigWindow.BorderWidth,
-                          [0, 0, 100, 100, 1])
-conn.core.MapWindow(window)
-conn.flush()
-conn.core.ConfigureWindow(window,
-                          xcffib.xproto.ConfigWindow.X | xcffib.xproto.ConfigWindow.Y |
-                          xcffib.xproto.ConfigWindow.Width | xcffib.xproto.ConfigWindow.Height |
-                          xcffib.xproto.ConfigWindow.BorderWidth,
-                          [0, 0, 100, 100, 1])
+# conn.core.ConfigureWindow(window,
+#                           xcffib.xproto.ConfigWindow.X | xcffib.xproto.ConfigWindow.Y |
+#                           xcffib.xproto.ConfigWindow.Width | xcffib.xproto.ConfigWindow.Height |
+#                           xcffib.xproto.ConfigWindow.BorderWidth,
+#                           [0, 0, 100, 100, 1])
 
-conn.flush()
 
 def killwindow():
     while True:
@@ -179,11 +163,11 @@ def killwindow():
     conn.core.UnmapWindow(window)
     conn.flush()
 
+conn.core.MapWindow(window)
+conn.flush()
 
 from threading import Thread
-
 t = Thread(target=killwindow)
 t.start()
-
 t.join()
 
