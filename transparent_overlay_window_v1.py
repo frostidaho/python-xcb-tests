@@ -1,7 +1,8 @@
-# https://github.com/sidorares/node-x11/blob/master/examples/smoketest/transpwindow.js
+#!/usr/bin/env python3
+# Resources:
 # https://github.com/tmarble/yxcba/blob/master/yxcba
-
-from __future__ import print_function
+# https://github.com/ben0x539/overlay-thing/blob/master/xcb.c
+# https://github.com/sidorares/node-x11/blob/master/examples/smoketest/transpwindow.js
 import sys
 import time
 import xcffib
@@ -124,7 +125,7 @@ wm_protocols = conn.core.InternAtom(0, len(wm_protocols), wm_protocols).reply().
 wm_delete_window = "WM_DELETE_WINDOW"
 wm_delete_window = conn.core.InternAtom(0, len(wm_delete_window), wm_delete_window).reply().atom
 
-# # https://github.com/ben0x539/overlay-thing/blob/master/xcb.c
+
 
 conn.core.ChangeProperty(xcffib.xproto.PropMode.Replace,
                          window, wm_protocols,
