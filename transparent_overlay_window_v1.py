@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Resources:
+# Resources for cobbling this example together:
+# https://raw.githubusercontent.com/qtile/qtile/5b67710badceb0ecaad8166befec9a9d48c7b1c1/test/scripts/window.py
 # https://github.com/tmarble/yxcba/blob/master/yxcba
 # https://github.com/ben0x539/overlay-thing/blob/master/xcb.c
 # https://github.com/sidorares/node-x11/blob/master/examples/smoketest/transpwindow.js
