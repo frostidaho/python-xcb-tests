@@ -15,8 +15,24 @@ setup = conn.get_setup()
 screen = conn.get_setup().roots[conn.pref_screen]
 root = screen.root
 
-
 def get_visual(screen, desired_depth=32):
+    """get_visual() returns the visual id of the screen @ some depth
+
+    Returns an int (xcb_visualid_t) corresponding to the screen's visualid
+    On failure it returns None.
+
+    For an ARGB visual -> desired_depth=32
+    For a RGB visual   -> desired_depth=24
+
+    If you just want the screen's default visual
+    you can do the following:
+    >>> conn = xcffib.connect(display=os.getenv('DISPLAY', ':0'))
+    >>> screen = conn.get_setup().roots[conn.pref_screen]
+    >>> visual = screen.root_visual
+
+    On my computer the default depth is only 24bit (screen.root_depth),
+    even when running a compositor.
+    """
     for depth in tuple(screen.allowed_depths):
         for v in depth.visuals:
             if depth.depth == desired_depth:
